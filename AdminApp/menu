@@ -1,6 +1,3 @@
-"""This is the main interface to access all data and create objects
-
-"""
 import sys
 
 
@@ -9,10 +6,12 @@ class Menu:
 
     def __init__(self):
         self.choices = {
-            "1": self.read_trips_file,
-            "2": self.figure_out_unsaved_trips,
-            "3": self.search_for_trip,
-            "4": self.read_reserve_file,
+            "1": self.choose_trip_files,
+            "2": self.parse_trips_from_files,
+            "3": self.figure_out_unsaved_trips,
+            "4": self.search_for_trip,
+            "5": self.choose_reserve_files,
+            "6": self.parse_reserves_from_files,
             "10": self.quit}
 
     @staticmethod
@@ -20,10 +19,12 @@ class Menu:
         print('''
         Orgutrip Menu
 
-        1. Leer los archivos con los trips.
-        2. Trabajar con los trips que no pudieron ser creados.
-        3. Buscar un trip en especìfico.
-        4. Leer los archivos con las reservas.
+        1. Elejir los archivos con los trips.
+        2. Leer cada archivo con los trips y generar los objetos.
+        3. Trabajar con los trips que no pudieron ser creados.
+        4. Buscar un trip en especìfico.
+        5. Elegir los archivos con las reservas.
+        6. Leer cada archivo con las reservas y generar los objetos.
         10. Quit
         ''')
 
@@ -38,13 +39,10 @@ class Menu:
             else:
                 print("{0} is not a valid choice".format(choice))
 
-    def read_trips_file(self):
+    def choose_trip_files(self):
         pass
 
-    def create_json_trips(self, content: str) -> dict:
-        pass
-
-    def create_trips(self, json_trips, position, postpone=True):
+    def parse_trips_from_files(self):
         pass
 
     def figure_out_unsaved_trips(self):
@@ -53,7 +51,10 @@ class Menu:
     def search_for_trip(self):
         pass
 
-    def read_reserve_file(self):
+    def choose_reserve_files(self):
+        pass
+
+    def parse_reserves_from_files(self):
         pass
 
     def quit(self):
