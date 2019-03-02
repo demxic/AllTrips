@@ -1,0 +1,65 @@
+"""This is the main interface to access all data and create objects
+
+"""
+import sys
+
+
+class Menu:
+    """Display a menu and respond to choices when run"""
+
+    def __init__(self):
+        self.choices = {
+            "1": self.read_trips_file,
+            "2": self.figure_out_unsaved_trips,
+            "3": self.search_for_trip,
+            "4": self.read_reserve_file,
+            "10": self.quit}
+
+    @staticmethod
+    def display_menu():
+        print('''
+        Orgutrip Menu
+
+        1. Leer los archivos con los trips.
+        2. Trabajar con los trips que no pudieron ser creados.
+        3. Buscar un trip en especìfico.
+        4. Leer los archivos con las reservas.
+        10. Quit
+        ''')
+
+    def run(self):
+        """Display the menu and respond to choices"""
+        while True:
+            self.display_menu()
+            choice = input("¿Qué deseas realizar?: ")
+            action = self.choices.get(choice)
+            if action:
+                action()
+            else:
+                print("{0} is not a valid choice".format(choice))
+
+    def read_trips_file(self):
+        pass
+
+    def create_json_trips(self, content: str) -> dict:
+        pass
+
+    def create_trips(self, json_trips, position, postpone=True):
+        pass
+
+    def figure_out_unsaved_trips(self):
+        pass
+
+    def search_for_trip(self):
+        pass
+
+    def read_reserve_file(self):
+        pass
+
+    def quit(self):
+        print("adiós")
+        sys.exit(0)
+
+
+if __name__ == '__main__':
+    Menu().run()
