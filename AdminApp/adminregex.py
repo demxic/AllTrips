@@ -10,3 +10,8 @@ import re
 page_number_RE = re.compile(r"""
     =+\d+=+
     """, re.VERBOSE | re.DOTALL)
+
+trips_total_RE = re.compile(r"""
+    trips:\s+       #The Total number of trips legend followed by one ore more white spaces 
+    (?P<trips_total>\d{1,4})        #Up to 4 digit total number of trips in the PBS trips file
+    """, re.VERBOSE | re.DOTALL)
