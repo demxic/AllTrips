@@ -74,7 +74,7 @@ class Menu:
                 print("Warning! {} trips should be processed but only {} were found".format(
                     total_trips_in_pbs_file, len(trips_as_dict)
                 ))
-        #     pending_trips = build_trips(trips_as_dict, position, crew_base=crew_base)
+            pending_trips = self.create_trips(trips_as_dict, position, postpone=True)
         #     print("{} trips contained in PBS pdf file".format(total_trips_in_pbs_file))
         #     print("{} trips were not built!".format(len(pending_trips)))
         #     unstored_trips.extend(pending_trips)
