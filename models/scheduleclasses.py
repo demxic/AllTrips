@@ -3,6 +3,33 @@ from datetime import datetime, timedelta
 from models.timeclasses import Duration
 
 
+class Airport(object):
+    """Create airports using the Flyweight pattern
+    Try using the weakref.WeakValueDictionary() if  garbage-collection concerned
+    for our simple app, not needed
+    """
+    _airports = dict()
+
+    def __new__(cls, iata_code: str = None, zone=None, viaticum=None):
+        airport = cls._airports.get(iata_code)
+        if not airport:
+            airport = super().__new__(cls)
+            cls._airports[iata_code] = airport
+
+        return airport
+
+    def __init__(self, iata_code: str, zone=None, viaticum: str = None):
+        """
+        Represents an airport as a 3 letter code
+        """
+        self.iata_code = iata_code
+        self.timezone = zone
+        self.viaticum = viaticum
+
+    def __str__(self):
+        return "{}".format(self.iata_code)
+
+
 class Itinerary(object):
     """ An Itinerary represents a Duration occurring between a 'begin' and an 'end' datetime.
 
