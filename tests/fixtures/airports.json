@@ -1,0 +1,29 @@
+[
+    {
+        "__class__": "Airport",
+        "__args__": [],
+        "__kw__": {
+            "iata_code": "MEX",
+            "zone": "America/Mexico_City",
+            "viaticum": "low_cost"
+        }
+    },
+    {
+        "__class__": "Airport",
+        "__args__": [],
+        "__kw__": {
+            "iata_code": "MAD",
+            "zone": "Europe/Madrid",
+            "viaticum": "madrid"
+        }
+    },
+    {
+        "__class__": "Airport",
+        "__args__": [],
+        "__kw__": {
+            "iata_code": "JFK",
+            "zone": "America/New_York",
+            "viaticum": "new_york"
+        }
+    }
+]
