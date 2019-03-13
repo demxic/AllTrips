@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
 
+from models.modelsregex import duration_fmt
+
 
 class Duration(object):
+    default_format = '<4'
 
     def __init__(self, minutes: int):
-        """value should be a timedelta or minutes (int)"""
-        # TODO : IMPLEMENT __format__ method
+        """value should be minutes (int)"""
         if minutes < 0:
             minutes = 0
         self.minutes = int(minutes)
@@ -20,40 +22,14 @@ class Duration(object):
         """string value should not have ':'"""
         hours = int(value[0:-2])
         minutes = int(value[-2:])
-        return cls(minutes=hours*60 + minutes)
+        return cls(minutes=hours * 60 + minutes)
+
+    def get_hours_and_minutes(self):
+        """Returns the total number of hours and minutes in the duration as a tuple"""
+        return divmod(self.minutes, 60)
 
     def as_timedelta(self):
         return timedelta(minutes=self.minutes)
-
-    def no_trailing_zero(self):
-        """Prints as HH:MM v.gr. 7:30 instead of 07:30"""
-        if self.minutes == 0:
-            hm = 4 * ''
-        else:
-            hours, minutes = divmod(self.minutes, 60)
-            hm = "{0}:{1:0>2d}".format(hours, minutes)
-
-        return hm
-
-    def __str__(self):
-        """Prints as HHMM v.gr. 1230"""
-        if self.minutes == 0:
-            hm = 4 * ''
-        else:
-            hours, minutes = divmod(self.minutes, 60)
-            hm = "{0:0>2d}{1:0>2d}".format(hours, minutes)
-
-        return hm
-
-    def __repr__(self):
-        """Prints as HHH:MM v.gr. 123:30"""
-        if self.minutes == 0:
-            hm = '00:00'
-        else:
-            hours, minutes = divmod(self.minutes, 60)
-            hm = "{0:0>2d}:{1:0>2d}".format(hours, minutes)
-
-        return hm
 
     def __add__(self, other):
         return Duration(self.minutes + other.minutes)
@@ -80,30 +56,38 @@ class Duration(object):
     def __eq__(self, other):
         return self.minutes == other.minutes
 
-    def __format__(self, fmt='0'):
-        """Depending on fmt value, a Duration can be printed as follow:
-        fmt = 0  :   HHMM          4 chars no signs                                v.gr. 0132, 0025, 0000
-        fmt = 1  :   HHMM          4 chars no sings or blank if self.minutes = 0   v.gr. 0132, 0025,'   '
-        fmt = 2  : HHH:MM          6 chars with colon in between                   v.gr  01:32, 00:25, 00:00, 132:45
-        fmt = 3  :  HH:MM          5 chars colon in between and blank for min =0   v.gr  01:32, 00:25, '    '
-        Any other value defaults to fmt == 0
+    def __str__(self):
+        """Prints as HHMM v.gr. 1230"""
+        return self.__format__(Duration.default_format)
+
+    def __repr__(self):
+        return "{__class__.__name__}({minutes})".format(__class__=self.__class__, **self.__dict__)
+
+    def __format__(self, format_spec):
+        """Depending on format_spec value, a Duration can be printed as follow:
+
+        [[fill]align][minimumwidth][:][visibility]
+        fill : character to be used to pad the field to the minimum width
+        align : '<' - Forces the field to be left-aligned within the available space (This is the default.)
+                '>' - Forces the field to be right-aligned within the available space.
+        :       include the colon when it should be printed out
+        visibility  :  Show or hide durations of 0 minutes.
+                        "T" - Show 00:00 or 0000 durations (This is the default.)
+                        "F" - Show '    ' instead.
         """
 
-        if fmt == '1':
-            return str(self)
-        elif fmt == '2':
-            return repr(self)
-        elif fmt == '3':
-            prov = repr(self)
-            if self.minutes == 0:
-                return '     '
-            else:
-                return repr(self)
+        if format_spec == "":
+            format_spec = self.default_format
+        rs = duration_fmt.match(format_spec).groupdict()
+        if rs['hide_if_zero']:
+            basic_string = ' '
         else:
-            if self.minutes == 0:
-                return '0000'
-            else:
-                return self.__str__()
+            rs['fill_align'] = rs['fill_align'] if rs['fill_align'] else ''
+            rs['size'] = rs['size'] if rs['size'] else ''
+            rs['colon'] = rs['colon'] if rs['colon'] else ''
+            basic_string = "{0}{2}{1}".format(*self.get_hours_and_minutes(), rs['colon'])
+        result = "{0:{fill_align}{size}s}".format(basic_string, **rs)
+        return result
 
 
 class DateTimeTracker(object):
