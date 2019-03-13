@@ -1,4 +1,6 @@
-import pytest, json
+import json
+import pytest
+
 from tests.json_loader import airport_decode
 
 data_file = "C://Users//Xico//Documents//PycharmProjects//AllTrips//tests//fixtures//airports.json"
