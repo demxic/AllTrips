@@ -5,6 +5,9 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="str.__truediv__" />
+          <option value="models.scheduleclasses.Itinerary" />
+          <option value="models.scheduleclasses.Flight" />
+          <option value="AdminApp.exceptions.Route" />
         </list>
       </option>
     </inspection_tool>

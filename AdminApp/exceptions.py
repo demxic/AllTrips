@@ -17,6 +17,10 @@ class UnbuiltTripError(Exception):
     pass
 
 
+class PreviouslyStoredTrip(Exception):
+    pass
+
+
 class DutyDayBlockError(Exception):
 
     def __init__(self, duty_day_dict: dict, duty_day) -> None:
@@ -46,4 +50,14 @@ class DutyDayBlockError(Exception):
 
 
 class UndefinedBlockTime(Exception):
+    pass
+
+
+class UnsavedRoute(Exception):
+    def __init__(self, route):
+        super().__init__("route: {} is not stored in the data base".format(route))
+        self.route = route
+
+
+class UnstoredTrip(Exception):
     pass
