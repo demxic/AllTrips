@@ -1,7 +1,7 @@
 from data.database import Database
 from models.scheduleclasses import CrewMember, Airport
 from models.timeclasses import DateTracker
-from models.txtRoster import RosterReader
+from models.txtRoster import RosterReader, Liner
 
 summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201904 - Resumen de horas.txt"
 Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")

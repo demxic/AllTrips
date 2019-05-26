@@ -252,6 +252,25 @@ class Itinerary(object):
         end = begin + a_timedelta
         return cls(begin, end)
 
+    @classmethod
+    def from_date_and_strings(cls, date: datetime.date, begin: str, end: str, timezone):
+        """date should  be a datetime.date object
+        begin and end should have a %H%M (2345) format"""
+        begin = '0000' if begin == '2400' else begin
+        end = '0000' if end == '2400' else end
+        formatting = '%H%M'
+        begin_string = datetime.strptime(begin, formatting).time()
+        begin = datetime.combine(date, begin_string)
+        end_string = datetime.strptime(end, formatting).time()
+        end = datetime.combine(date, end_string)
+
+        if end < begin:
+            end += timedelta(days=1)
+        begin = timezone.localize(begin)
+        end = timezone.localize(end)
+        itinerary = cls(begin=begin.astimezone(pytz.utc), end=end.astimezone(pytz.utc))
+        return itinerary
+
     @property
     def duration(self) -> Duration:
         return Duration.from_timedelta(self.end - self.begin)
@@ -273,6 +292,8 @@ class Itinerary(object):
 
     def __eq__(self, other):
         return (self.begin == other.begin) and (self.end == other.end)
+
+
 
 
 class Event(object):
@@ -1105,7 +1126,7 @@ class Trip(object):
 class Line(object):
     """ Represents an ordered sequence of events for a given month"""
 
-    def __init__(self, month, year, crew_member=None):
+    def __init__(self, month: str, year: str, crew_member: CrewMember = None) -> None:
         self.duties = []
         self.month = month
         self.year = year
