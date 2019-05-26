@@ -1,7 +1,11 @@
-from models.scheduleclasses import CrewMember
+from data.database import Database
+from models.scheduleclasses import CrewMember, Airport
+from models.timeclasses import DateTracker
 from models.txtRoster import RosterReader
 
 summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201904 - Resumen de horas.txt"
+Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
+
 
 class Menu:
     """Display a menu and respond to choices when run"""
@@ -68,8 +72,9 @@ class Menu:
         rr = RosterReader(content)
 
         # 1. Create Crew Member
+        #TODO : Load Crew Member data from the DataBase compare and  update
         crew_member = CrewMember(**rr.crew_stats)
-        crew_member.base = Airport.load_from_db_by_iata_code(crew_member.base)
+        crew_member.base = Airport.load_from_db(iata_code=crew_member.base)
         print("Crew Member :", end=" ")
         print(crew_member)
         print("crew_stats : ", rr.crew_stats)

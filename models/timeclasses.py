@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+import dateutil.relativedelta
+
 from models.modelsregex import duration_fmt
 
 date_format = "%d%m%Y"
@@ -125,3 +127,38 @@ class DateTimeTracker(object):
 
     def __str__(self):
         return self.dt.strftime(self.datetime_format)
+
+
+class DateTracker(object):
+    """Used to track whenever there is a change in month"""
+
+    def __init__(self, year, month, carry_in=False):
+        months_sp = {'ENE': 1, 'FEB': 2, 'MAR': 3, 'ABR': 4, 'MAY': 5, 'JUN': 6,
+                     'JUL': 7, 'AGO': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DIC': 12}
+        three_letter_month = month[0:3]
+        self.year = year
+        self.month = months_sp[three_letter_month]
+        self.dated = date(self.year, self.month, 1)
+        if carry_in:
+            self.backwards()
+
+    def backwards(self):
+        """Moves one month back in time"""
+        self.dated = self.dated + dateutil.relativedelta.relativedelta(months=-1)
+
+    def replace(self, day):
+        """Change self.date's day to given value, resulting date must
+           always be forward in time"""
+        day = int(day)
+        if day < self.dated.day:
+            # If condition is met, move one month forward
+            self.dated = self.dated.replace(day=day)
+            self.dated = self.dated + dateutil.relativedelta.relativedelta(months=+1)
+        else:
+            # Still in the same month
+            # print("self.dated {} = ".format(self.dated))
+            # print("self.dated.replace(day = day)      day = {}".format(day))
+            self.dated = self.dated.replace(day=day)
+
+    def __str__(self):
+        return "Pointing to {0:%d-%b-%Y}".format(self.dated)
