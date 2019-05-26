@@ -96,6 +96,7 @@ class Menu:
         entered = input("Enter trip/dated to search for ####/YYYY-MM-DD ")
         trip_id, trip_dated = entered.split('/')
         trip = Trip.load_by_id(trip_id, trip_dated)
+        trip.astimezone(timezone='local')
         print(trip)
 
     def choose_reserve_files(self):

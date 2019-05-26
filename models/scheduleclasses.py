@@ -166,8 +166,8 @@ class Route(object):
                            '    WHERE route_id=%s',
                            (route_id,))
             route_data = cursor.fetchone()
-            origin = Airport(route_data[1])
-            destination = Airport(route_data[2])
+            origin = Airport.load_from_db(iata_code=route_data[1])
+            destination = Airport.load_from_db(iata_code=route_data[2])
 
             return cls(name=route_data[0], origin=origin,
                        destination=destination, route_id=route_id)
@@ -649,7 +649,8 @@ class Flight(GroundDuty):
             flight_data = cursor.fetchone()
             if flight_data:
                 route = Route.load_by_id(route_id=flight_data[2])
-                itinerary = Itinerary.from_timedelta(begin=flight_data[3],
+                begin = pytz.utc.localize(flight_data[3])
+                itinerary = Itinerary.from_timedelta(begin=begin,
                                                      a_timedelta=flight_data[4])
                 equipment = Equipment.load_from_db(airplane_code=flight_data[5])
                 carrier = flight_data[1]
