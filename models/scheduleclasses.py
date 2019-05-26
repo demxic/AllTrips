@@ -55,7 +55,7 @@ class Airport(object):
 
         return airport
 
-    def __init__(self, iata_code: str, timezone=None, viaticum: str = None):
+    def __init__(self, iata_code: str, timezone: pytz.timezone = None, viaticum: str = None) :
         """
         Represents an airport as a 3 letter code
         """
@@ -253,7 +253,7 @@ class Itinerary(object):
         return cls(begin, end)
 
     @classmethod
-    def from_date_and_strings(cls, date: datetime.date, begin: str, end: str, timezone):
+    def from_date_and_strings(cls, date: datetime.date, begin: str, end: str, timezone=None):
         """date should  be a datetime.date object
         begin and end should have a %H%M (2345) format"""
         begin = '0000' if begin == '2400' else begin
@@ -266,9 +266,15 @@ class Itinerary(object):
 
         if end < begin:
             end += timedelta(days=1)
-        begin = timezone.localize(begin)
-        end = timezone.localize(end)
-        itinerary = cls(begin=begin.astimezone(pytz.utc), end=end.astimezone(pytz.utc))
+        if timezone:
+            # Specify the given timezone
+            begin = timezone.localize(begin)
+            end = timezone.localize(end)
+            # And turn them into utc, as this is how all objects should be created
+            begin.astimezone(pytz.utc)
+            end.astimezone(pytz.utc)
+
+        itinerary = cls(begin=begin, end=end)
         return itinerary
 
     @property
