@@ -131,8 +131,8 @@ class Liner(object):
                 roster_day['begin'] = '0001'
                 roster_day['end'] = '2359'
                 itinerary = self.build_itinerary(roster_day)
-                route = Route.load_from_db(name=roster_day['name'], origin=self.crew_member.base,
-                                           destination=self.crew_member.base)
+                route = Route(name=roster_day['name'], origin=self.crew_member.base,
+                              destination=self.crew_member.base, route_id=None)
                 marker = Event(route=route, scheduled_itinerary=itinerary)
                 self.line.append(marker)
             elif len(roster_day['name']) == 2 and not roster_day['name'] in ['RZ', 'TX', 'TO']:
@@ -147,10 +147,10 @@ class Liner(object):
         for flight in roster_day['flights']:
             itinerary = Itinerary.from_date_and_strings(date=self.date_tracker.dated,
                                                         begin=flight['begin'], end=flight['end'],
-                                                        timezone=self.crew_member.base.timezone)
-            origin = Airport.load_from_db(iata_code=flight['origin'])
-            destination = Airport.load_from_db(iata_code=flight['destination'])
-            route = Route.load_from_db(name=flight['name'][-4:], origin=origin, destination=destination)
+                                                        timezone=None)
+            origin = Airport(iata_code=flight['origin'])
+            destination = Airport(iata_code=flight['destination'])
+            route = Route(name=flight['name'][-4:], origin=origin, destination=destination, route_id=None)
             if self.line_type == 'scheduled':
                 f = Flight(route=route, scheduled_itinerary=itinerary)
             else:
@@ -184,6 +184,6 @@ class Liner(object):
             # print("{} {} ".format(self.date_tracker.dated, rD['name']))
             # begin, end = input("Begin and END time as HHMM HHMM ").split()
         itinerary = Itinerary.from_date_and_strings(date=self.date_tracker.dated, begin=begin, end=end,
-                                                    timezone=self.crew_member.base.timezone)
+                                                    timezone=None)
 
         return itinerary

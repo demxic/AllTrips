@@ -4,7 +4,7 @@ from models.timeclasses import DateTracker
 from models.txtRoster import RosterReader, Liner
 
 summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201904 - Resumen de horas.txt"
-Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
+#Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
 
 
 class Menu:
@@ -72,9 +72,9 @@ class Menu:
         rr = RosterReader(content)
 
         # 1. Create Crew Member
-        #TODO : Load Crew Member data from the DataBase compare and  update
+        #TODO : No database loading should be done at this stage
         crew_member = CrewMember(**rr.crew_stats)
-        crew_member.base = Airport.load_from_db(iata_code=crew_member.base)
+        crew_member.base = Airport(iata_code=crew_member.base)
         print("Crew Member :", end=" ")
         print(crew_member)
         print("crew_stats : ", rr.crew_stats)
@@ -94,7 +94,6 @@ class Menu:
 
     def retrieve_duties_from_data_base(self):
         pass
-
 
     def print_components(self):
         pass
