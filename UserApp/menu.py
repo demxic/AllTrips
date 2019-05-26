@@ -1,3 +1,6 @@
+from models.txtRoster import RosterReader
+
+summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201904 - Resumen de horas.txt"
 
 class Menu:
     """Display a menu and respond to choices when run"""
@@ -58,7 +61,30 @@ class Menu:
         pass
 
     def read_flights_summary(self):
-        pass
+        """Let's read month's flights summary from a given .txt file"""
+        with open(summaryFile, 'r') as fp:
+            content = fp.read()
+        rr = RosterReader(content)
+
+        # 1. Create Crew Member
+        crew_member = CrewMember(**rr.crew_stats)
+        crew_member.base = Airport.load_from_db_by_iata_code(crew_member.base)
+        print("Crew Member :", end=" ")
+        print(crew_member)
+        print("crew_stats : ", rr.crew_stats)
+        print("Carry in within month? ", rr.carry_in)
+        print("Roster timeZone ", rr.timeZone)
+        print("Roster year and month ", rr.year, rr.month)
+
+        dt = DateTracker(rr.year, rr.month, rr.carry_in)
+        print("\ndatetracker for ", dt)
+
+        print("\nCreating a Liner")
+        liner = Liner(date_tracker=dt, roster_days=rr.roster_days, crew_member=crew_member,
+                      line_type='actual_itinerary')
+        liner.build_line()
+        self.line = liner.line
+        self.line.crew_member = crew_member
 
     def retrieve_duties_from_data_base(self):
         pass
