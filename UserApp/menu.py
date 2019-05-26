@@ -54,7 +54,8 @@ class Menu:
         pass
 
     def print_line(self):
-        pass
+        """Let's print out the roaster"""
+        print(self.line)
 
     def credits(self):
         pass
