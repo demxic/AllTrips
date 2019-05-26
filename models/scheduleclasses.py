@@ -6,6 +6,7 @@ from data.database import CursorFromConnectionPool
 from models.timeclasses import Duration
 
 
+
 class Airline(object):
     _airlines = dict()
 
@@ -80,6 +81,23 @@ class Airport(object):
 
     def __repr__(self):
         return "<{__class__.__name__}> {iata_code}".format(__class__=self.__class__, **self.__dict__)
+
+
+class CrewMember(object):
+    """Defines a CrewMember"""
+
+    def __init__(self, crew_member_id: int = None, name: str = None, pos: str = None, crew_group: str = None,
+                 base: Airport = None, seniority: int = None):
+        self.crew_member_id = crew_member_id
+        self.name = name
+        self.position = pos
+        self.crew_group = crew_group
+        self.base = base
+        self.seniority = seniority
+        self.line = None
+
+    def __str__(self):
+        return "{0:3s} {1:6s}-{2:12s}".format(self.position, self.crew_member_id, self.name)
 
 
 class Equipment(object):

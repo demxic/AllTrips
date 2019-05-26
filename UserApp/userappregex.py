@@ -19,7 +19,7 @@ crewstats_no_type = re.compile(r"""
     (?P<crew_member_id>\d{6})\s+    #6 digits at start followed by one or more spaces        v.gr. 102711
     (?P<name>(\w{1,12}|(\w{1,11}\s\w{1,11})))\s+           #One or twelve alphanumeric crew member line name        v.gr. XICOTENCATL
     (?P<pos>[A-Z]{3})\s+            #Three letter postion id                                 v.gr. SOB
-    (?P<group>\w{4})\s+             #Group for member                                        v.gr. S001
+    (?P<crew_group>\w{4})\s+             #Group for member                                        v.gr. S001
     (?P<base>[A-Z]{3})\s+           #Three letter code for homebase airport                  v.gr. MEX
     (?:\d)\s+                       #Line number, whatever that means                        v.gr. 0
     (?P<seniority>\d{1,4})\s+       #Crewmember's line number                                v.gr. 694

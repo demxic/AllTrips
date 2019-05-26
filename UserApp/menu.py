@@ -1,3 +1,4 @@
+from models.scheduleclasses import CrewMember
 from models.txtRoster import RosterReader
 
 summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201904 - Resumen de horas.txt"
