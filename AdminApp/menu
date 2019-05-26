@@ -1,10 +1,15 @@
-import sys
+import pickle, sys
 from pathlib import Path
-
+from data.database import Database
 from AdminApp.filereaders import verify_files, page_number_remover, number_of_trips_in_pbs_file, create_trips_as_dict
+from AdminApp.objectbuilders import create_trips
+from models.scheduleclasses import Trip
 
-files = []
-data_folder = Path("C:/Users/Xico/Google Drive/Sobrecargo/PBS/2019 PBS/201901 PBS")
+files_list = []
+Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
+data_folder = Path("C:/Users/Xico/Google Drive/Sobrecargo/PBS/2019 PBS/201904 PBS")
+pickled_unsaved_trips_file = 'unsaved_trips.txt'
+
 
 class Menu:
     """Display a menu and respond to choices when run"""
@@ -48,11 +53,11 @@ class Menu:
         """This option chooses the files that are to be read and turned into meaningful data
 
                 """
-        global files, data_folder
-        file_names = ["201901 - PBS vuelos SOB A.txt",
-                      "201901 - PBS vuelos SOB B.txt",
-                      "201901 - PBS vuelos EJE.txt"]
-        files = verify_files(data_folder, file_names)
+        global files_list, data_folder
+        file_names = ["201904 - PBS vuelos SOB A.txt",
+                      "201904 - PBS vuelos SOB B.txt",
+                      "201904 - PBS vuelos EJE.txt"]
+        files_list = verify_files(data_folder, file_names)
 
     def parse_trips_from_files(self):
         """Will read each pbs trip file and turn it into usable dictionaries
@@ -61,32 +66,37 @@ class Menu:
         Second run: from strings into dictionaries
         Third run: from dictionaries into objects"""
 
+        global files_list, data_folder
         unstored_trips = list()
-        for file in files:
+        for file in files_list:
             # First Run. Read in and clean the txt.file
             print("\n Parsing file : {}".format(file))
             position = input("Is this a PBS file for EJE or SOB? ").upper()
             crew_base = 'MEX'
             cleaned_content = page_number_remover(file)
             total_trips_in_pbs_file = number_of_trips_in_pbs_file(cleaned_content)
-            trips_as_dict = create_trips_as_dict(trips_as_strings=cleaned_content)
+            trips_as_dict = create_trips_as_dict(trips_as_strings=cleaned_content, crew_position=position,
+                                                 crew_base=crew_base)
             if total_trips_in_pbs_file != len(trips_as_dict):
                 print("Warning! {} trips should be processed but only {} were found".format(
                     total_trips_in_pbs_file, len(trips_as_dict)
                 ))
-            pending_trips = self.create_trips(trips_as_dict, position, postpone=True)
-        #     print("{} trips contained in PBS pdf file".format(total_trips_in_pbs_file))
-        #     print("{} trips were not built!".format(len(pending_trips)))
-        #     unstored_trips.extend(pending_trips)
-        # outfile = open(data_folder / pickled_unsaved_trips_file, 'wb')
-        # pickle.dump(unstored_trips, outfile)
-        # outfile.close()
+            pending_trips = create_trips(trips_as_dict, position, postpone=True)
+            print("{} trips contained in PBS pdf file".format(total_trips_in_pbs_file))
+            print("{} trips were not built!".format(len(pending_trips)))
+            unstored_trips.extend(pending_trips)
+        outfile = open(data_folder / pickled_unsaved_trips_file, 'wb')
+        pickle.dump(unstored_trips, outfile)
+        outfile.close()
 
     def figure_out_unsaved_trips(self):
         pass
 
     def search_for_trip(self):
-        pass
+        entered = input("Enter trip/dated to search for ####/YYYY-MM-DD ")
+        trip_id, trip_dated = entered.split('/')
+        trip = Trip.load_by_id(trip_id, trip_dated)
+        print(trip)
 
     def choose_reserve_files(self):
         pass
