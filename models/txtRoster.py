@@ -147,7 +147,7 @@ class Liner(object):
         for flight in roster_day['flights']:
             itinerary = Itinerary.from_date_and_strings(date=self.date_tracker.dated,
                                                         begin=flight['begin'], end=flight['end'],
-                                                        timezone=None)
+                                                        timezone=self.crew_member.base.timezone)
             origin = Airport(iata_code=flight['origin'])
             destination = Airport(iata_code=flight['destination'])
             route = Route(name=flight['name'][-4:], origin=origin, destination=destination, route_id=None)
@@ -184,6 +184,6 @@ class Liner(object):
             # print("{} {} ".format(self.date_tracker.dated, rD['name']))
             # begin, end = input("Begin and END time as HHMM HHMM ").split()
         itinerary = Itinerary.from_date_and_strings(date=self.date_tracker.dated, begin=begin, end=end,
-                                                    timezone=None)
+                                                    timezone=self.crew_member.base.timezone)
 
         return itinerary

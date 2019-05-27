@@ -1,3 +1,5 @@
+import pytz, sys
+
 from data.database import Database
 from models.scheduleclasses import CrewMember, Airport
 from models.timeclasses import DateTracker
@@ -75,7 +77,7 @@ class Menu:
         # 1. Create Crew Member
         #TODO : No database loading should be done at this stage
         crew_member = CrewMember(**rr.crew_stats)
-        crew_member.base = Airport(iata_code=crew_member.base)
+        crew_member.base = Airport(iata_code=crew_member.base, timezone=pytz.timezone('America/Mexico_City'))
         print("Crew Member :", end=" ")
         print(crew_member)
         print("crew_stats : ", rr.crew_stats)

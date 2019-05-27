@@ -271,9 +271,8 @@ class Itinerary(object):
             begin = timezone.localize(begin)
             end = timezone.localize(end)
             # And turn them into utc, as this is how all objects should be created
-            begin.astimezone(pytz.utc)
-            end.astimezone(pytz.utc)
-
+            begin = begin.astimezone(pytz.utc)
+            end = end.astimezone(pytz.utc)
         itinerary = cls(begin=begin, end=end)
         return itinerary
 
