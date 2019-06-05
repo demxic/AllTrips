@@ -1,12 +1,13 @@
 import pytz, sys
 
+from AdminApp.exceptions import UnstoredTrip
 from data.database import Database
-from models.scheduleclasses import CrewMember, Airport
+from models.scheduleclasses import CrewMember, Airport, Trip, Flight
 from models.timeclasses import DateTracker
 from models.txtRoster import RosterReader, Liner
 
 summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201904 - Resumen de horas.txt"
-#Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
+Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
 
 
 class Menu:
@@ -57,6 +58,7 @@ class Menu:
 
     def print_line(self):
         """Let's print out the roaster"""
+        self.line.astimezone(timezone=pytz.timezone('America/Mexico_City'))
         print(self.line)
 
     def credits(self):
@@ -96,7 +98,32 @@ class Menu:
         self.line.crew_member = crew_member
 
     def retrieve_duties_from_data_base(self):
-        pass
+        for duty in self.line.duties:
+            if isinstance(duty, Trip):
+                #TODO : Aquí me quedé. Ahora resulta que los números de trip pueden cambiar
+                try:
+                    stored_trip = Trip.load_by_id(trip_number=duty.number, dated=duty.dated)
+                except UnstoredTrip:
+                    # TODO : This is all messy, try using analogous code from the AdminApp
+                    for flight in duty.get_event_list():
+                        loaded_flight = Flight.load_from_db_by_fields(
+                            airline_iata_code=flight.carrier,
+                            scheduled_begin=flight.actual_itinerary.begin,
+                            route=flight.route)[0]
+                        flight.scheduled_itinerary = loaded_flight.scheduled_itinerary
+                        flight.equipment = loaded_flight.equipment
+                        flight.event_id = loaded_flight.event_id
+                    duty.astimezone(timezone=pytz.timezone('America/Mexico_City'))
+                    print(duty)
+                    duty.astimezone(timezone=pytz.utc)
+                else:
+                    for flight, loaded_flight in zip(duty.get_event_list(), stored_trip.get_event_list()):
+                        flight.scheduled_itinerary = loaded_flight.scheduled_itinerary
+                        flight.equipment = loaded_flight.equipment
+                        flight.event_id = loaded_flight.event_id
+                    stored_trip.astimezone(timezone=pytz.timezone('America/Mexico_City'))
+                    print(stored_trip)
+                    stored_trip.astimezone(timezone=pytz.utc)
 
     def print_components(self):
         pass

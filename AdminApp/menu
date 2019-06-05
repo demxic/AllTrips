@@ -90,7 +90,15 @@ class Menu:
         outfile.close()
 
     def figure_out_unsaved_trips(self):
-        pass
+        infile = open(data_folder / pickled_unsaved_trips_file, 'rb')
+        unstored_trips = pickle.load(infile)
+        print("Building {} unsaved_trips :".format(len(unstored_trips)))
+        # 1. Let us go over all trips again, some might now be discarded
+        irreparable_trips = self.create_trips(unstored_trips, None, postpone=False)
+        print(" {} unsaved_trips".format(len(irreparable_trips)))
+        outfile = open(data_folder + pickled_unsaved_trips_file, 'wb')
+        pickle.dump(irreparable_trips, outfile)
+        outfile.close()
 
     def search_for_trip(self):
         entered = input("Enter trip/dated to search for ####/YYYY-MM-DD ")

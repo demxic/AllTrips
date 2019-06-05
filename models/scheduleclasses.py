@@ -622,47 +622,6 @@ class Flight(GroundDuty):
     #                        (self.carrier, self.route.route_id, self.begin,
     #                         self.duration.as_timedelta(), self.equipment.airplane_code, self.event_id))
 
-    # def update_from_database(self):
-    #     """Load all fields for this event, compare each field to its corresponding parameter
-    #        and update accordingly """
-    #     loaded_flight = self.load_from_db_by_fields(airline_iata_code=self.carrier, scheduled_begin=self.begin,
-    #                                                 route=self.route)
-    #     if not loaded_flight:
-    #         # This is typical of a return to TARMAC, where flight will now be AM0025 MEX MEX before AM0025 MEX AMS
-    #         # TODO : Create scheduled itinerary for returned flight automatically instead of prompting for fields
-    #         print(80 * '*')
-    #         print("Event {} does not exist in DB \n".format(self))
-    #         print("Create scheduled itinerary for event \n\n")
-    #         flight_parameters = Flight.create_flight_parameters()
-    #         created_flight = Flight(**flight_parameters)
-    #         created_flight.save_to_db()
-    #         loaded_flight = self.load_from_db_by_fields(airline_iata_code=self.carrier, scheduled_begin=self.begin,
-    #                                                     route=self.route)
-    #     self.event_id = loaded_flight.event_id
-    #
-    #     # 1. Scheduled itineraries should be the same
-    #     if self.scheduled_itinerary:
-    #         if loaded_flight.scheduled_itinerary and (self.scheduled_itinerary != loaded_flight.scheduled_itinerary):
-    #             print("scheduled_itinerary discrepancy, which one would you like to keep ? ")
-    #             print("1. {} ".format(self.scheduled_itinerary))
-    #             print("2. {} ".format(loaded_flight.scheduled_itinerary))
-    #             option = input()
-    #             if option != 1:
-    #                 self.scheduled_itinerary = loaded_flight.scheduled_itinerary
-    #     elif loaded_flight.scheduled_itinerary:
-    #         self.scheduled_itinerary = loaded_flight.scheduled_itinerary
-    #
-    #     # 2. Actual itineraries should be, and should be the same
-    #     if self.actual_itinerary:
-    #         if loaded_flight.actual_itinerary and (self.actual_itinerary != loaded_flight.actual_itinerary):
-    #             print("actual_itinerary discrepancy, which one would you like to keep ? ")
-    #             print("1. {} ".format(self.actual_itinerary))
-    #             print("2. {} ".format(loaded_flight.actual_itinerary))
-    #             option = input()
-    #             if option != 1:
-    #                 self.actual_itinerary = loaded_flight.actual_itinerary
-    #     elif loaded_flight.actual_itinerary:
-    #         self.actual_itinerary = loaded_flight.actual_itinerary
     #
     #     # This is tricky, because the DH condition is loaded in the duty_days table, not in each flight
     #     # if self.dh != loaded_flight.dh:
@@ -701,38 +660,39 @@ class Flight(GroundDuty):
                 return cls(route=route, scheduled_itinerary=itinerary, equipment=equipment,
                            carrier=carrier, event_id=flight_id)
 
-    # @classmethod
-    # def load_from_db_by_fields(cls, airline_iata_code: str, scheduled_begin: datetime, route: Route):
-    #     """Load from Data Base. """
-    #     built_flights = None
-    #     with CursorFromConnectionPool() as cursor:
-    #         cursor.execute('SELECT * FROM public.flights '
-    #                        '    WHERE airline_iata_code = %s '
-    #                        '      AND route_id=%s'
-    #                        '      AND scheduled_begin::date=%s;',
-    #                        (airline_iata_code, route.route_id, scheduled_begin.date()))
-    #         flights_data = cursor.fetchall()
-    #         if flights_data:
-    #             built_flights = []
-    #             for flight_data in flights_data:
-    #                 flight_id = flight_data[0]
-    #                 carrier_code = flight_data[1]
-    #                 scheduled_begin = flight_data[3]
-    #                 scheduled_block = flight_data[4]
-    #                 equipment = Equipment(flight_data[5])
-    #                 actual_begin = flight_data[6]
-    #                 actual_block = flight_data[7]
-    #                 scheduled_itinerary = Itinerary.from_timedelta(begin=utc.localize(scheduled_begin),
-    #                                                                a_timedelta=scheduled_block)
-    #                 if actual_begin:
-    #                     actual_itinerary = Itinerary.from_timedelta(begin=utc.localize(actual_begin),
-    #                                                                 a_timedelta=actual_block)
-    #                 else:
-    #                     actual_itinerary = None
-    #                 built_flights.append(
-    #                     cls(route=route, scheduled_itinerary=scheduled_itinerary, actual_itinerary=actual_itinerary,
-    #                         equipment=equipment, carrier=carrier_code, event_id=flight_id))
-    #     return built_flights
+    @classmethod
+    def load_from_db_by_fields(cls, airline_iata_code: str, scheduled_begin: datetime, route: Route):
+        """Load from Data Base. """
+        built_flights = None
+        route = Route.load_from_db(name=route.name, origin=route.origin, destination=route.destination)
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('SELECT * FROM public.flights '
+                           '    WHERE airline_iata_code = %s '
+                           '      AND route_id=%s'
+                           '      AND scheduled_begin::date=%s;',
+                           (airline_iata_code, route.route_id, scheduled_begin.date()))
+            flights_data = cursor.fetchall()
+            if flights_data:
+                built_flights = []
+                for flight_data in flights_data:
+                    flight_id = flight_data[0]
+                    carrier_code = flight_data[1]
+                    scheduled_begin = flight_data[3]
+                    scheduled_block = flight_data[4]
+                    equipment = Equipment.load_from_db(airplane_code=flight_data[5])
+                    actual_begin = flight_data[6]
+                    actual_block = flight_data[7]
+                    scheduled_itinerary = Itinerary.from_timedelta(begin=pytz.utc.localize(scheduled_begin),
+                                                                   a_timedelta=scheduled_block)
+                    if actual_begin:
+                        actual_itinerary = Itinerary.from_timedelta(begin=pytz.utc.localize(actual_begin),
+                                                                    a_timedelta=actual_block)
+                    else:
+                        actual_itinerary = None
+                    built_flights.append(
+                        cls(route=route, scheduled_itinerary=scheduled_itinerary, actual_itinerary=actual_itinerary,
+                            equipment=equipment, carrier=carrier_code, event_id=flight_id))
+        return built_flights
 
     @classmethod
     def fetch_all_matching(cls, airline_iata_code: str, scheduled_begin: datetime, route: Route) -> list:
@@ -999,7 +959,7 @@ class Trip(object):
                 trip = cls(number=trip_number, dated=trip_data[1], crew_position=trip_data[6], crew_base=airport)
                 return trip
             else:
-                raise UnstoredTrip
+                raise UnstoredTrip(trip_number=trip_number, dated=dated)
 
     @property
     def report(self):
@@ -1065,6 +1025,13 @@ class Trip(object):
 
     def __setitem__(self, key, value):
         self.duty_days[key] = value
+
+    def get_event_list(self):
+        event_list = []
+        for duty_day in self.duty_days:
+            for event in duty_day.events:
+                event_list.append(event)
+        return event_list
 
     def astimezone(self, timezone='local'):
         """Change event's itineraries to given timezone"""
@@ -1179,6 +1146,11 @@ class Line(object):
 
     def __iter__(self):
         return iter(self.duties)
+
+    def astimezone(self, timezone):
+        for duty in self.duties:
+            if isinstance(duty, Trip):
+                duty.astimezone(timezone)
 
     def return_duty_days(self):
         """Turn all dutydays to a list called dd """
