@@ -2,11 +2,13 @@ import pytz, sys
 
 from AdminApp.exceptions import UnstoredTrip
 from data.database import Database
+from models import creditator
 from models.scheduleclasses import CrewMember, Airport, Trip, Flight
 from models.timeclasses import DateTracker
 from models.txtRoster import RosterReader, Liner
 
-summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201904 - Resumen de horas.txt"
+# summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201904 - Resumen de horas.txt"
+summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\Rol-2019-04-R.txt"
 Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
 
 
@@ -62,7 +64,21 @@ class Menu:
         print(self.line)
 
     def credits(self):
-        pass
+        self.line.astimezone(pytz.timezone('America/Mexico_City'))
+        cr = creditator.Creditator('SOB', 'SO01', self.line.month)
+        print(creditator.line_credits_header)
+        for row in self.line.compute_credits(cr):
+            print(row)
+        print(self.line._credits['template'].format(**self.line._credits))
+        mmmm = cr.month_credits(self.line._credits)
+        print("""
+                                t_ext_vuelo:    {xblock:2}
+                                t_ext_servicio: {xduty:2}
+                                t_ext_nocturno: {night:2}
+                                maxirre:        {maxirre:2}
+                                séptimo día     {day7: >5}
+                                prima dominical {sunday: >5}
+                                """.format(**mmmm))
 
     def viaticum(self):
         pass
