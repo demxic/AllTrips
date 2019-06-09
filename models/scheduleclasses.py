@@ -876,6 +876,15 @@ class DutyDay(object):
         for event in self.events:
             event.astimezone(timezone)
 
+    def how_many_sundays(self) -> int:
+        """Returns the number of sundays"""
+        sundays = []
+        if self.report.isoweekday() == '7':
+            sundays.append(self.report.date())
+        if self.release.isoweekday() == '7':
+            sundays.append(self.release.date())
+        return len(sundays)
+
     def __str__(self):
         """The string representation of the current DutyDay"""
         rpt = '{:%H%M}'.format(self.report)
@@ -1074,6 +1083,10 @@ class Trip(object):
         footer = footer_template.format(**self._credits)
         return header + body + footer
 
+    def how_many_sundays(self) -> int:
+        sundays = filter(lambda date: date.isoweekday() == 7, self.get_elapsed_dates())
+        return len(list(sundays))
+
     def save_to_db(self):
         """Save to db should only be concerned with saving a trip regardless of
            its previous status, i.e. if it has been stored before or not
@@ -1147,7 +1160,7 @@ class Line(object):
     def __iter__(self):
         return iter(self.duties)
 
-    def astimezone(self, timezone):
+    def astimezone(self, timezone: pytz.timezone) -> None:
         for duty in self.duties:
             if isinstance(duty, Trip):
                 duty.astimezone(timezone)
