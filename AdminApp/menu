@@ -7,7 +7,7 @@ from models.scheduleclasses import Trip
 
 files_list = []
 Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
-data_folder = Path("C:/Users/Xico/Google Drive/Sobrecargo/PBS/2019 PBS/201904 PBS")
+data_folder = Path("C:/Users/Xico/Google Drive/Sobrecargo/PBS/2019 PBS/201905 PBS")
 pickled_unsaved_trips_file = 'unsaved_trips.txt'
 
 
@@ -54,9 +54,8 @@ class Menu:
 
                 """
         global files_list, data_folder
-        file_names = ["201904 - PBS vuelos SOB A.txt",
-                      "201904 - PBS vuelos SOB B.txt",
-                      "201904 - PBS vuelos EJE.txt"]
+        file_names = ["201905 - PBS vuelos SOB B.txt",
+                      "201905 - PBS vuelos EJE.txt"]
         files_list = verify_files(data_folder, file_names)
 
     def parse_trips_from_files(self):
@@ -72,16 +71,16 @@ class Menu:
             # First Run. Read in and clean the txt.file
             print("\n Parsing file : {}".format(file))
             position = input("Is this a PBS file for EJE or SOB? ").upper()
-            crew_base = 'MEX'
+            trip_base = input("Enter iata_code for PBS-file trip base: ")
             cleaned_content = page_number_remover(file)
             total_trips_in_pbs_file = number_of_trips_in_pbs_file(cleaned_content)
             trips_as_dict = create_trips_as_dict(trips_as_strings=cleaned_content, crew_position=position,
-                                                 crew_base=crew_base)
+                                                 trip_base=trip_base)
             if total_trips_in_pbs_file != len(trips_as_dict):
                 print("Warning! {} trips should be processed but only {} were found".format(
                     total_trips_in_pbs_file, len(trips_as_dict)
                 ))
-            pending_trips = create_trips(trips_as_dict, position, postpone=True)
+            pending_trips = create_trips(trips_as_dict, postpone=True)
             print("{} trips contained in PBS pdf file".format(total_trips_in_pbs_file))
             print("{} trips were not built!".format(len(pending_trips)))
             unstored_trips.extend(pending_trips)
@@ -92,11 +91,12 @@ class Menu:
     def figure_out_unsaved_trips(self):
         infile = open(data_folder / pickled_unsaved_trips_file, 'rb')
         unstored_trips = pickle.load(infile)
+        infile.close()
         print("Building {} unsaved_trips :".format(len(unstored_trips)))
         # 1. Let us go over all trips again, some might now be discarded
-        irreparable_trips = self.create_trips(unstored_trips, None, postpone=False)
+        irreparable_trips = create_trips(trips_as_dict=unstored_trips, postpone=False)
         print(" {} unsaved_trips".format(len(irreparable_trips)))
-        outfile = open(data_folder + pickled_unsaved_trips_file, 'wb')
+        outfile = open(data_folder / pickled_unsaved_trips_file, 'wb')
         pickle.dump(irreparable_trips, outfile)
         outfile.close()
 
