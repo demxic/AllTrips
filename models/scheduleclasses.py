@@ -1,7 +1,7 @@
 """This module holds all needed classes"""
 from datetime import datetime, timedelta, date
 import pytz
-from AdminApp.exceptions import UnsavedRoute, PreviouslyStoredTrip, UnstoredTrip
+from AdminApp.exceptions import UnsavedRoute, PreviouslyStoredTrip, UnstoredTrip, UnsavedAirport
 from data.database import CursorFromConnectionPool
 from models.timeclasses import Duration
 
@@ -75,9 +75,22 @@ class Airport(object):
             with CursorFromConnectionPool() as cursor:
                 cursor.execute('SELECT * FROM airports WHERE iata_code=%s;', (iata_code,))
                 airport_data = cursor.fetchone()
+            if airport_data:
                 timezone = pytz.timezone(airport_data[1] + '/' + airport_data[2])
                 airport = cls(iata_code=airport_data[0], timezone=timezone, viaticum=airport_data[3])
+            else:
+                raise UnsavedAirport(airport_iata_code=iata_code)
         return airport
+
+    def save_to_db(self):
+        continent, tz_city = self.timezone.zone.split('/')
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('INSERT INTO public.airports(iata_code, continent, tz_city, viaticum_zone) '
+                           'VALUES (%s, %s, %s, %s) '
+                           'RETURNING iata_code; ',
+                           (self.iata_code, continent, tz_city, self.viaticum))
+            iata_code = cursor.fetchone()[0]
+            return iata_code
 
     def __repr__(self):
         return "<{__class__.__name__}> {iata_code}".format(__class__=self.__class__, **self.__dict__)
@@ -111,7 +124,7 @@ class Equipment(object):
             cls._equipments[airplane_code] = equipment
         return equipment
 
-    def __init__(self, airplane_code, cabin_members: int = 0):
+    def __init__(self, airplane_code: str, cabin_members: int = 0):
         if not hasattr(self, 'initted'):
             self.airplane_code = airplane_code
             self.cabin_members = cabin_members
@@ -162,19 +175,22 @@ class Route(object):
 
     @classmethod
     def load_from_db(cls, name: str, origin: Airport, destination: Airport):
-        route = cls(name=name, origin=origin, destination=destination, route_id=None)
-        with CursorFromConnectionPool() as cursor:
-            cursor.execute('SELECT route_id FROM public.routes '
-                           '    WHERE name=%s'
-                           '      AND origin=%s'
-                           '      AND destination=%s',
-                           (name, origin.iata_code, destination.iata_code))
-            route_id = cursor.fetchone()
-            if route_id:
-                route.route_id = route_id[0]
-                return route
-            else:
-                raise UnsavedRoute(route=route)
+        route_key = name + origin.iata_code + destination.iata_code
+        loaded_route = cls._routes.get(route_key)
+        if not loaded_route:
+            with CursorFromConnectionPool() as cursor:
+                cursor.execute('SELECT route_id FROM public.routes '
+                               '    WHERE name=%s'
+                               '      AND origin=%s'
+                               '      AND destination=%s',
+                               (name, origin.iata_code, destination.iata_code))
+                route_id = cursor.fetchone()
+                if route_id:
+                    loaded_route = cls(name=name, origin=origin, destination=destination, route_id=route_id[0])
+                    return loaded_route
+                else:
+                    raise UnsavedRoute(route=cls(name=name, origin=origin, destination=destination, route_id=None))
+        return loaded_route
 
     @classmethod
     def load_by_id(cls, route_id : int):
@@ -275,6 +291,19 @@ class Itinerary(object):
             end = end.astimezone(pytz.utc)
         itinerary = cls(begin=begin, end=end)
         return itinerary
+
+    @classmethod
+    def from_string(cls, input_string: str) -> object:
+        """
+        format DDMMYYYY HHMM    HHMM
+               23122019 1340    0320
+               DATE     begin   blk
+        """
+        date, begin, blk = input_string.split()
+        formatting = '%d%m%Y%H%M'
+        begin = datetime.strptime(date + begin, formatting)
+        begin.astimezone(tz=pytz.utc)
+        return cls.from_timedelta(begin=begin, a_timedelta=Duration.from_string(blk).as_timedelta())
 
     @property
     def duration(self) -> Duration:
@@ -735,7 +764,7 @@ class Flight(GroundDuty):
                            'SET airline_iata_code = %s, route_id = %s, scheduled_begin = %s, '
                            'scheduled_block = %s, equipment = %s '
                            'WHERE flight_id = %s;',
-                           (self.carrier, self.route.route_id, self.begin,
+                           (self.carrier, self.route.route_id, self.begin.replace(tzinfo=None),
                             self.duration.as_timedelta(), self.equipment.airplane_code, self.event_id))
 
     def astimezone(self, timezone='local'):
@@ -909,14 +938,14 @@ class Trip(object):
     A trip_match is a collection of DutyDays for a specific crew_base
     """
 
-    def __init__(self, number: str, dated: date, crew_position: str, crew_base: Airport) -> object:
+    def __init__(self, number: str, dated: date, crew_position: str, trip_base: Airport) -> object:
         """A trip is identified by a 4 digit number and its report date.
         Trip's report date should be localized in trip's crew_base
         """
         self.number = number
         self.dated = dated
         self.crew_position = crew_position
-        self.crew_base = crew_base
+        self.trip_base = trip_base
         self._credits = {}
         self.duty_days = []
 
@@ -965,7 +994,7 @@ class Trip(object):
             trip_data = cursor.fetchone()
             if trip_data:
                 airport = Airport.load_from_db(trip_data[7])
-                trip = cls(number=trip_number, dated=trip_data[1], crew_position=trip_data[6], crew_base=airport)
+                trip = cls(number=trip_number, dated=trip_data[1], crew_position=trip_data[6], trip_base=airport)
                 return trip
             else:
                 raise UnstoredTrip(trip_number=trip_number, dated=dated)
@@ -1100,7 +1129,7 @@ class Trip(object):
             if not trip_data:
                 cursor.execute('INSERT INTO public.trips (number, dated, crew_position, crew_base) '
                                'VALUES (%s, %s, %s, %s);', (self.number, self.dated, self.crew_position,
-                                                            self.crew_base.iata_code))
+                                                            self.trip_base.iata_code))
             else:
                 raise PreviouslyStoredTrip
 
