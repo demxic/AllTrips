@@ -38,25 +38,25 @@ class DutyDayBlockError(Exception):
                 flight.delete()
                 found_one_after_dh = True
 
-    def correct_invalid_events(self):
-        for flight in self.duty_day.events:
-            print(flight)
-            r = input("Is flight properly built? y/n").capitalize()
-            if 'N' in r:
-                itinerary_string = input("Enter itinerary as string (date, begin, blk) 31052018 2206 0122 ")
-                itinerary = Itinerary.from_string(itinerary_string)
-                flight.scheduled_itinerary = itinerary
-                flight.update_to_db()
-
 
 class UndefinedBlockTime(Exception):
-    pass
+    def __init__(self, flight_dict, flight):
+        super().__init__("No se ha podido deteriminar el blk time del vuelo {}/{}".format(
+                flight.name, flight.begin))
+        self.flight_dict = flight_dict
+        self.flight = flight
 
 
 class UnsavedRoute(Exception):
     def __init__(self, route):
         super().__init__("route: {} is not stored in the data base".format(route))
         self.route = route
+
+
+class UnsavedAirport(Exception):
+    def __init__(self, airport_iata_code):
+        super().__init__("airport: {} is not stored in the data base".format(airport_iata_code))
+        self.airport_iata_code = airport_iata_code
 
 
 class UnstoredTrip(Exception):
