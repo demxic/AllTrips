@@ -41,14 +41,14 @@ def number_of_trips_in_pbs_file(pbs_file_content: str) -> int:
     return total_trips
 
 
-def create_trips_as_dict(trips_as_strings: str, crew_position: str, crew_base: str) -> list:
+def create_trips_as_dict(trips_as_strings: str, crew_position: str, trip_base: str) -> list:
     """Return a list containing all trip_as_dict from its corresponding trip_string"""
 
     dict_trips = []
     for trip_match in trip_RE.finditer(trips_as_strings):
         trip_as_dict = get_trip_as_dict(trip_match.groupdict())
         trip_as_dict['crew_position'] = crew_position
-        trip_as_dict['crew_base'] = crew_base
+        trip_as_dict['trip_base'] = trip_base
         dict_trips.append(trip_as_dict)
         print("Trip {} dated {} found!".format(trip_as_dict['number'], trip_as_dict['dated']))
 

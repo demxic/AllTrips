@@ -65,3 +65,5 @@ class UnstoredTrip(Exception):
                          "".format(trip_number, dated))
         self.trip_number = trip_number
         self.dated = dated
+
+
