@@ -111,7 +111,7 @@ class Liner(object):
                 if trip_number != trip_number_tracker:
                     # A new trip_match has been found, let's create it
                     trip = Trip(number=trip_number, dated=self.date_tracker.dated,
-                                crew_position=self.crew_member.position, crew_base=self.crew_member.base)
+                                crew_position=self.crew_member.position, trip_base=self.crew_member.base)
                     trip_number_tracker = trip.number
                     trip.append(duty_day)
                     self.line.append(trip)
