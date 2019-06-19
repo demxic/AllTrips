@@ -6,7 +6,6 @@ from data.database import CursorFromConnectionPool
 from models.timeclasses import Duration
 
 
-
 class Airline(object):
     _airlines = dict()
 
@@ -51,11 +50,11 @@ class Airport(object):
         airport = cls._airports.get(iata_code)
         if not airport:
             airport = super().__new__(cls)
-            cls._airports[iata_code] = airport
-
+            if timezone:
+                cls._airports[iata_code] = airport
         return airport
 
-    def __init__(self, iata_code: str, timezone: pytz.timezone = None, viaticum: str = None) :
+    def __init__(self, iata_code: str, timezone: pytz.timezone = None, viaticum: str = None):
         """
         Represents an airport as a 3 letter code
         """
@@ -161,7 +160,8 @@ class Route(object):
         route = cls._routes.get(route_key)
         if not route:
             route = super().__new__(cls)
-            cls._routes[route_key] = route
+            if route_id:
+                cls._routes[route_key] = route
         return route
 
     def __init__(self, name: str, origin: Airport, destination: Airport, route_id: int = None):
@@ -177,6 +177,8 @@ class Route(object):
     def load_from_db(cls, name: str, origin: Airport, destination: Airport):
         route_key = name + origin.iata_code + destination.iata_code
         loaded_route = cls._routes.get(route_key)
+        origin = Airport.load_from_db(iata_code=origin.iata_code)
+        destination = Airport.load_from_db(iata_code=destination.iata_code)
         if not loaded_route:
             with CursorFromConnectionPool() as cursor:
                 cursor.execute('SELECT route_id FROM public.routes '
@@ -187,13 +189,12 @@ class Route(object):
                 route_id = cursor.fetchone()
                 if route_id:
                     loaded_route = cls(name=name, origin=origin, destination=destination, route_id=route_id[0])
-                    return loaded_route
                 else:
                     raise UnsavedRoute(route=cls(name=name, origin=origin, destination=destination, route_id=None))
         return loaded_route
 
     @classmethod
-    def load_by_id(cls, route_id : int):
+    def load_by_id(cls, route_id: int):
         with CursorFromConnectionPool() as cursor:
             cursor.execute('SELECT name, origin, destination '
                            '    FROM public.routes '
@@ -293,7 +294,7 @@ class Itinerary(object):
         return itinerary
 
     @classmethod
-    def from_string(cls, input_string: str) -> object:
+    def from_string(cls, input_string: str) -> 'Itinerary':
         """
         format DDMMYYYY HHMM    HHMM
                23122019 1340    0320
@@ -326,8 +327,6 @@ class Itinerary(object):
 
     def __eq__(self, other):
         return (self.begin == other.begin) and (self.end == other.end)
-
-
 
 
 class Event(object):
@@ -588,7 +587,10 @@ class Flight(GroundDuty):
         return built_flights
 
     def save_to_db(self) -> int:
-        # scheduled_begin = self.scheduled_itinerary.begin
+        if not self.route.route_id:
+            self.route = Route.load_from_db(name=self.route.name,
+                                            origin=self.route.origin,
+                                            destination=self.route.destination)
         if not self.event_id:
             with CursorFromConnectionPool() as cursor:
                 cursor.execute('INSERT INTO public.flights('
