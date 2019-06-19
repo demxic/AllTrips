@@ -7,8 +7,8 @@ from models.scheduleclasses import CrewMember, Airport, Trip, Flight
 from models.timeclasses import DateTracker
 from models.txtRoster import RosterReader, Liner
 
-# summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201904 - Resumen de horas.txt"
-summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\Rol-2019-04-R.txt"
+summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\201905 - Resumen de horas.txt"
+#summaryFile = "C:\\Users\\Xico\\Google Drive\\Sobrecargo\\Resumen de horas\\2019\\Rol-2019-05-R.txt"
 Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
 
 

@@ -1,9 +1,16 @@
+import datetime
 import pickle, sys
 from pathlib import Path
+
+import pytz
+
+from AdminApp.exceptions import UnstoredTrip
 from data.database import Database
 from AdminApp.filereaders import verify_files, page_number_remover, number_of_trips_in_pbs_file, create_trips_as_dict
 from AdminApp.objectbuilders import create_trips
-from models.scheduleclasses import Trip
+from models.scheduleclasses import Trip, Airport, Itinerary, Flight, Route, Equipment, DutyDay
+from models.timeclasses import Duration
+from datetime import datetime
 
 files_list = []
 Database.initialise(database="orgutrip", user="postgres", password="0933", host="localhost")
@@ -20,8 +27,9 @@ class Menu:
             "2": self.parse_trips_from_files,
             "3": self.figure_out_unsaved_trips,
             "4": self.search_for_trip,
-            "5": self.choose_reserve_files,
-            "6": self.parse_reserves_from_files,
+            "5": self.create_new_trip,
+            "6": self.choose_reserve_files,
+            "7": self.parse_reserves_from_files,
             "10": self.quit}
 
     @staticmethod
@@ -33,8 +41,9 @@ class Menu:
         2. Leer cada archivo con los trips y generar los objetos.
         3. Trabajar con los trips que no pudieron ser creados.
         4. Buscar un trip en especìfico.
-        5. Elegir los archivos con las reservas.
-        6. Leer cada archivo con las reservas y generar los objetos.
+        5. Crear un trip manualmente.
+        6. Elegir los archivos con las reservas.
+        7. Leer cada archivo con las reservas y generar los objetos.
         10. Quit
         ''')
 
@@ -104,6 +113,45 @@ class Menu:
         entered = input("Enter trip/dated to search for ####/YYYY-MM-DD ")
         trip_id, trip_dated = entered.split('/')
         trip = Trip.load_by_id(trip_id, trip_dated)
+        trip.astimezone(timezone='local')
+        print(trip)
+
+    def create_new_trip(self):
+        """Manually create and store a new trip"""
+        print("Enter trip info  #4digit number, dated YYYY-MM-DD, crew_position, trip_base")
+        trip_number, trip_date, crew_position, trip_base = input().split()
+        trip_base = Airport(iata_code='MEX')
+        try:
+            trip = Trip.load_trip_info(trip_number=trip_number, dated=trip_date)
+            print("Trip is already stored in the DB")
+        except UnstoredTrip:
+            trip = Trip(number=trip_number, dated=trip_date, crew_position=crew_position, trip_base=trip_base)
+            duty_days_len = int(input("How many duty days in trip? "))
+            for e in range(duty_days_len):
+                duty_day = DutyDay()
+                ans = True
+                while ans:
+                    input_string = input("Enter flight v.gr DDMMYYYY AM0636 ORG DES ETDE BLCK EQP : ")
+                    flight_date, flight_name, origin_airport, destination_airport, etd, block, \
+                    airplane_code = input_string.upper().split()
+                    origin = Airport(iata_code=origin_airport)
+                    destination = Airport(iata_code=destination_airport)
+                    route = Route(name=flight_name[-4:], origin=origin, destination=destination, route_id=None)
+                    equipment = Equipment(airplane_code=airplane_code, cabin_members=0)
+                    dh = flight_name.startswith('DH')
+                    if dh:
+                        carrier = input("Enter carrier iata code ")
+                    else:
+                        carrier = 'AM'
+                    begin = pytz.utc.localize(datetime.strptime(flight_date+etd, "%d%m%Y%H%M"))
+                    duration = Duration.from_string(value=block)
+                    itinerary = Itinerary.from_timedelta(begin=begin, a_timedelta=duration.as_timedelta())
+                    flight = Flight(route=route, scheduled_itinerary=itinerary, equipment=equipment,
+                                    carrier=carrier, dh=dh, position=crew_position)
+                    duty_day.append(flight)
+                    ans = eval(input("Enter another flight? True/False "))
+                trip.append(duty_day)
+        trip.save_to_db()
         trip.astimezone(timezone='local')
         print(trip)
 
