@@ -84,7 +84,7 @@ class Duration(object):
         if format_spec == "":
             format_spec = self.default_format
         rs = duration_fmt.match(format_spec).groupdict()
-        if rs['hide_if_zero']:
+        if rs['hide_if_zero'] and self.minutes == 0:
             basic_string = ' '
         else:
             rs['fill_align'] = rs['fill_align'] if rs['fill_align'] else ''
