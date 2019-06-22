@@ -54,8 +54,8 @@ MAX_TURN_TIME = Duration(3 * 60)
 # Templates
 string_part_template = "{day: >2} {routing!s:20s} {event_names!s:25s} {duty_type:18s} {report:%H:%M} " \
                        "{release:%H:%M}    "
-num_part_template = " {daily:3} {block:3} {dh:3} {night:3} {xblock:3} " \
-                    "{xduty:3} {maxirre:3} {delay:3} {xturn:3} "
+num_part_template = " {daily:<4H} {block:<4H} {dh:<4H} {night:<4H} {xblock:<4H} " \
+                    "{xduty:<4H} {maxirre:<4H} {delay:<4H} {xturn:<4H} "
 duty_day_credits_template = string_part_template + num_part_template
 trip_credits_template = duty_day_credits_template + '{pending_rest:3} '
 
@@ -64,8 +64,8 @@ line_credits_template = 50 * ' ' + "TOTALS" + 27 * ' ' + num_part_template
 
 # Headers
 duty_day_credits_header = 'D  RUTA                 SERVICIOS              TIPO DE JORNADA       FIMA  CIERRE    ' \
-                          'DUTY  BLK   DH    NOCT  XBLK  XDTY  IRRE  DLAY  PLAT  '
-trip_credits_header = duty_day_credits_header + 'RECE  '
+                          'DUTY  BLK   DH NOCT XBLK XDTY IRRE DLAY PLAT '
+trip_credits_header = duty_day_credits_header + 'RECE '
 line_credits_header = trip_credits_header + 'DESC FERI'
 
 
