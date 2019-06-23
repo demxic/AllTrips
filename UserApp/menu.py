@@ -137,9 +137,6 @@ class Menu:
                         flight.scheduled_itinerary = loaded_flight.scheduled_itinerary
                         flight.equipment = loaded_flight.equipment
                         flight.event_id = loaded_flight.event_id
-                    stored_trip.astimezone(timezone=pytz.timezone('America/Mexico_City'))
-                    print(stored_trip)
-                    stored_trip.astimezone(timezone=pytz.utc)
 
     def print_components(self):
         pass

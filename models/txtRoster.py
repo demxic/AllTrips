@@ -127,7 +127,7 @@ class Liner(object):
                     trip.append(duty_day)
                     self.line.duties[-1] = trip
 
-            elif roster_day['name'] in ['VA', 'X', 'XX']:
+            elif roster_day['name'] in ['VA', 'X', 'XX', 'TO']:
                 roster_day['begin'] = '0001'
                 roster_day['end'] = '2359'
                 itinerary = self.build_itinerary(roster_day)
