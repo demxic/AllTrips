@@ -373,6 +373,14 @@ class Event(object):
         return self.scheduled_itinerary.end if self.scheduled_itinerary else None
 
     @property
+    def report(self) -> datetime:
+        return self.begin
+
+    @property
+    def release(self) -> datetime:
+        return self.end
+
+    @property
     def duration(self) -> Duration:
         return Duration.from_timedelta(self.end - self.begin)
 
@@ -418,14 +426,6 @@ class GroundDuty(Event):
         event_parameters = Event.create_event_parameters()
         event_parameters['position'] = input("Is this an EJE or SOB position? ").capitalize()[:3]
         return event_parameters
-
-    @property
-    def report(self) -> datetime:
-        return self.begin
-
-    @property
-    def release(self) -> datetime:
-        return self.end
 
     def as_robust_string(self, rpt=4 * '', rls=4 * '', turn=4 * ''):
         """Prints a Ground Duty following this heather template
@@ -1174,6 +1174,10 @@ class Line(object):
     def return_duty(self, dutyId):
         """Return the corresponding duty for the given dutyId"""
         return (duty for duty in self.duties if duty.id == dutyId)
+
+    def sort(self):
+        """Sort all duties by its report time"""
+        self.duties.sort(key=lambda duty: duty.report)
 
     def __delitem__(self, key):
         del self.duties[key]
